@@ -49,7 +49,7 @@ struct brgemm_inner_product_fwd_t : public primitive_t {
         DECLARE_COMMON_PD_T(JIT_IMPL_NAME_HELPER("brgemm:", isa, ""),
                 brgemm_inner_product_fwd_t);
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             using namespace utils;
             using namespace data_type;
 
@@ -248,7 +248,7 @@ struct brgemm_inner_product_bwd_data_t : public primitive_t {
         DECLARE_COMMON_PD_T(JIT_IMPL_NAME_HELPER("brgemm_bwd_d:", isa, ""),
                 brgemm_inner_product_bwd_data_t);
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             using skip_mask_t = primitive_attr_t::skip_mask_t;
 
             auto diff_src_dt = invariant_src_md()->data_type;
@@ -433,7 +433,7 @@ struct brgemm_inner_product_bwd_weights_t : public primitive_t {
         DECLARE_COMMON_PD_T(JIT_IMPL_NAME_HELPER("brgemm_bwd_w:", isa, ""),
                 brgemm_inner_product_bwd_weights_t);
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             using skip_mask_t = primitive_attr_t::skip_mask_t;
 
             auto src_dt = invariant_src_md()->data_type;

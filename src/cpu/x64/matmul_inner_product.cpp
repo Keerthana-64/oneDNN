@@ -46,7 +46,7 @@ bool is_desired_mm_impl(
 }
 
 status_t create_matmul_pd(std::shared_ptr<primitive_desc_t> &matmul_pd,
-        engine_t *engine, const memory_desc_t *src_md,
+        const engine_t *engine, const memory_desc_t *src_md,
         const memory_desc_t *wei_md, const memory_desc_t *dst_md,
         const memory_desc_t *bia_md, const memory_desc_t *reduce_md,
         const primitive_attr_t *attr) {
@@ -175,7 +175,7 @@ int matmul_inner_product_fwd_t::pd_t::get_k_blk(format_tag_t tag) const {
 // mechanism to map inner product weights layouts to the matmul ones and
 // vice versa.
 status_t matmul_inner_product_fwd_t::pd_t::init_matmul_params(
-        engine_t *engine) {
+        const engine_t *engine) {
     using namespace format_tag;
 
     // clang-format off
@@ -332,7 +332,7 @@ status_t matmul_inner_product_fwd_t::pd_t::init_matmul_params(
 }
 
 status_t matmul_inner_product_bwd_data_t::pd_t::init_matmul_params(
-        engine_t *engine) {
+        const engine_t *engine) {
     memory_desc_t mm_src_md {};
     memory_desc_t mm_wei_md {};
     memory_desc_t mm_dst_md {};
@@ -350,7 +350,7 @@ status_t matmul_inner_product_bwd_data_t::pd_t::init_matmul_params(
 }
 
 status_t matmul_inner_product_bwd_weights_t::pd_t::init_matmul_params(
-        engine_t *engine) {
+        const engine_t *engine) {
     memory_desc_t mm_src_md {};
     memory_desc_t mm_wei_md {};
     memory_desc_t mm_dst_md {};

@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright 2025 ZTE Corporation
+* Copyright 2026 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -36,7 +37,7 @@ struct rvv_batch_normalization_fwd_t : public primitive_t {
 
         DECLARE_COMMON_PD_T_("jit:rvv", rvv_batch_normalization_fwd_t);
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             UNUSED(engine);
 
             using namespace data_type;

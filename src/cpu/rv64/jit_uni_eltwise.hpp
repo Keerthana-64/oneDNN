@@ -1,6 +1,7 @@
 /*******************************************************************************
 * Copyright 2025 ZTE Corporation
 * Copyright 2026 Institute of Software, Chinese Academy of Sciences
+* Copyright 2026 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -57,7 +58,7 @@ struct jit_uni_eltwise_fwd_t : public primitive_t {
         DECLARE_COMMON_PD_T(
                 JIT_IMPL_NAME_HELPER("jit:", isa, ""), jit_uni_eltwise_fwd_t);
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             UNUSED(engine);
             using namespace dnnl::impl::data_type;
 
@@ -133,7 +134,7 @@ struct jit_uni_eltwise_bwd_t : public primitive_t {
         DECLARE_COMMON_PD_T(
                 JIT_IMPL_NAME_HELPER("jit:", isa, ""), jit_uni_eltwise_bwd_t)
 
-        status_t init(engine_t *engine) {
+        status_t init(const engine_t *engine) {
             UNUSED(engine);
             using namespace dnnl::impl::data_type;
 
