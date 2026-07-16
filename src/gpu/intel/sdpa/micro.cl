@@ -1170,10 +1170,14 @@ micro_sdpa(const global KEY_DATA_T *K, const global QRY_DATA_T *Q,
 #endif
 
         // save columns logsumexp to workspace for training pass
-        const uint preprocess_batch = b1 * (DST_D1 * q) + b0 * q;
+        // will match layout of reduced (d-dim) DST
+        const uint LSE_S0 = DST_S0 / d;
+        const uint LSE_S1 = DST_S1 / d;
+        const uint LSE_S2 = DST_S2 / d;
+        const uint preprocess_batch = b1 * LSE_S0 + b0 * LSE_S1;
 
         global float *ws_logsumexp = ws + preprocess_batch;
-        tile_store(S_max_tile_old, ws_logsumexp, q_group_size, 1, q_group_size,
+        tile_store_t(S_max_tile_old, ws_logsumexp, q_group_size, 1, LSE_S2,
                 sg_j0_kq + wg_j0, sg_i0_kq);
         // sg_i0 specified to avoid OOB subgroups from aliasing
 #endif

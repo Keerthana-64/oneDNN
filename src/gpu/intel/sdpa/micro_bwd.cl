@@ -585,8 +585,13 @@ micro_sdpa_bwd(const global KEY_DATA_T *K, const global QRY_DATA_T *Q,
     uint wg_i0 = wg_k * ugemm_kq_wg_tile_m;
 
     const uint preprocess_batch = b1 * (DST_D1 * q) + b0 * q;
-    const global float *ws_logsumexp = ws + preprocess_batch;
     Di += preprocess_batch;
+
+    // match fwd DST layout
+    const uint LSE_S0 = DST_S0 / d;
+    const uint LSE_S1 = DST_S1 / d;
+    const uint LSE_S2 = DST_S2 / d;
+    const global float *ws_logsumexp = ws + b1 * LSE_S0 + b0 * LSE_S1;
 
     /* Calculate the number of keys to process */
     int q0end = q;
@@ -864,7 +869,7 @@ micro_sdpa_bwd(const global KEY_DATA_T *K, const global QRY_DATA_T *Q,
 
         s_sum_tile_type S_logsumexp_tile;
         tile_fill(S_logsumexp_tile, 0.f);
-        tile_load(&S_logsumexp_tile, ws_logsumexp, q, 1, ugemm_kq_wg_tile_n,
+        tile_load_t(&S_logsumexp_tile, ws_logsumexp, q, 1, LSE_S2,
                 sg_j0_kq + q0, 0);
 #define mulscale(x) (x * scale)
         tile_elementwise(S_tile, mulscale);
