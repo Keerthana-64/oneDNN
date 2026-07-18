@@ -51,7 +51,7 @@ namespace cpu {
 namespace x64 {
 namespace ir {
 
-struct postops_injector_t {
+struct DNNL_API postops_injector_t {
     // gen            - generator the injected post-op code is emitted into
     // isa            - kernel ISA
     // post_ops       - attribute post-ops chain to apply
