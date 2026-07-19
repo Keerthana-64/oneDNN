@@ -60,7 +60,7 @@ struct brgemm_convolution_bwd_strided_t : public primitive_t {
         // need custom hasher to use array as key in unordered_map
         template <int asize>
         struct hasher_t {
-            size_t operator()(const std::array<int, asize> &a) const {
+            size_t operator()(const std::array<dim_t, asize> &a) const {
                 size_t seed = 0;
                 for (auto e : a)
                     seed = hash_combine(seed, e);
@@ -68,21 +68,21 @@ struct brgemm_convolution_bwd_strided_t : public primitive_t {
             }
         };
         template <int asize>
-        using Arrmap = std::unordered_map<std::array<int, asize>, int,
+        using Arrmap = std::unordered_map<std::array<dim_t, asize>, dim_t,
                 hasher_t<asize>>;
 
-        int brg_indices_c {0};
+        dim_t brg_indices_c {0};
         Arrmap<6> brg_indices;
 
-        int get_brg_idx(int m, bool do_initialization, bool is_N_tail,
-                bool is_K_tail, int bd_mask_idx = 0, int bs = 0) const {
+        dim_t get_brg_idx(dim_t m, bool do_initialization, bool is_N_tail,
+                bool is_K_tail, dim_t bd_mask_idx = 0, dim_t bs = 0) const {
             const auto brg_idx = brg_indices.find({m, is_N_tail, is_K_tail,
                     do_initialization, bd_mask_idx, bs});
             if (brg_idx == brg_indices.end()) return -1;
             return brg_idx->second;
         }
 
-        int get_any_brg_idx(bool is_N_tail, bool is_K_tail) const {
+        dim_t get_any_brg_idx(bool is_N_tail, bool is_K_tail) const {
             // return first defined brgemm_descriptor for specified parameters
             for (const auto &key_value_pair : brg_indices) {
                 const bool i_N = key_value_pair.first[1];
@@ -94,8 +94,8 @@ struct brgemm_convolution_bwd_strided_t : public primitive_t {
             return 0;
         }
 
-        status_t add_brg_descriptor(int M, bool is_N_tail, bool is_K_tail,
-                bool do_init, int bd_mask_idx = 0,
+        status_t add_brg_descriptor(dim_t M, bool is_N_tail, bool is_K_tail,
+                bool do_init, dim_t bd_mask_idx = 0,
                 const std::vector<char> &bd_mask = {}, int bs = 0);
         void get_kw_range(int iw, int iw_raw, int &kw_s, int &kw_full_s,
                 int &kw_full_e, int &kw_e) const;
@@ -165,11 +165,11 @@ private:
         char *c_buffer;
         char *out_buffer;
         char *wsp_tile;
-        int cur_brg_idx;
-        int g, n, icb;
-        int id, idb, ih, ihb, iwb;
-        int occ;
-        int sw;
+        dim_t cur_brg_idx;
+        dim_t g, n, icb;
+        dim_t id, idb, ih, ihb, iwb;
+        dim_t occ;
+        dim_t sw;
         const void *src_scales;
         const void *wei_scales;
         const void *dst_scales;
@@ -179,12 +179,12 @@ private:
         int32_t *s8s8_comp_ptr;
     };
 
-    inline static int get_ker_po_idx(int m, bool do_postwork, bool is_N_tail) {
-        return (m * 2 + static_cast<int>(do_postwork)) * 2
-                + static_cast<int>(is_N_tail);
+    inline static int get_ker_po_idx(dim_t m, bool do_postwork, bool is_N_tail) {
+        return static_cast<int>((m * 2 + static_cast<int>(do_postwork)) * 2
+                + static_cast<int>(is_N_tail));
     }
 
-    inline int get_comp_iw(const int iw) const {
+    inline dim_t get_comp_iw(dim_t iw) const {
         return utils::div_up(IW, SW) * (iw % SW) + iw / SW;
     }
 
@@ -192,8 +192,9 @@ private:
     void ker_trans(brgemm_bwd_thread_ctx_t &btc, char *inp_buffer) const;
 
     void perform_outwork(char *dst_base, char *dst, char *c_buffer,
-            const char *bias_w, int od, int oh, int ow, int iw_raw, int g_oc,
-            bool is_oc_tail, int ker_ow_s, int ker_ow_f, int kd_l, int kh_l,
+            const char *bias_w, dim_t od, dim_t oh, dim_t ow, dim_t iw_raw,
+            dim_t g_oc, bool is_oc_tail, dim_t ker_ow_s, dim_t ker_ow_f,
+            dim_t kd_l, dim_t kh_l,
             const void *post_ops_binary_rhs_arg_vec, int32_t src_zp_val,
             int32_t *src_zp_ptr, const int32_t *dst_zp_ptr,
             int32_t *s8s8_compensation, size_t comp_ker_offs,
@@ -201,30 +202,29 @@ private:
             const void *src_scales, const void *wei_scales,
             const void *dst_scales) const;
 
-    void call_brgemm_kernel(brgemm_bwd_thread_ctx_t &btc, int brg_idx,
+    void call_brgemm_kernel(brgemm_bwd_thread_ctx_t &btc, dim_t brg_idx,
             int batch_size, char *ptr_C, char *ptr_D, const char *bias_w,
-            int g_ic, bool do_postops, const void *binary_post_ops_rhs,
+            dim_t g_ic, bool do_postops, const void *binary_post_ops_rhs,
             int32_t src_zp_val, int32_t *src_zp_ptr, const int32_t *dst_zp_ptr,
             int32_t *s8s8_comp, bool do_only_comp, bool is_first_call_postops,
             const char *dst_orig_override = nullptr) const;
 
     void maybe_trans_inp(int ithr, const char *__restrict input,
             char *__restrict inp_buffer, uint8_t *__restrict inp_buffer_mask,
-            int g, int n, int icc, int odb, int ohb, int owb, int last_g,
-            int last_n, int last_icc, int last_odb, int last_ohb,
-            int last_owb) const;
+            dim_t g, dim_t n, dim_t icc, dim_t odb, dim_t ohb, dim_t owb,
+            dim_t last_g, dim_t last_n, dim_t last_icc, dim_t last_odb,
+            dim_t last_ohb, dim_t last_owb) const;
 
     status_t add_po_kernel(brgemm_desc_t *bcfg, int ker_idx, bool is_init);
-    void add_po_kernels(int i_N, int init_bcast_dim, int po_bcast_dim);
-    status_t add_brg_kernel(int brg_idx);
+    void add_po_kernels(int i_N, dim_t init_bcast_dim, dim_t po_bcast_dim);
+    status_t add_brg_kernel(dim_t brg_idx);
 
     void cal_compensation(const char *__restrict weights,
             int32_t *src_zp_buffer, int32_t *s8s8_comp_buffer) const;
-    int get_comp_ker_idx(const int kd_b, const int kd_e, const int kh_b,
-            const int kh_e, const int kw_b, const int kw_e) const;
-    int get_comp_offset(const int g, const int icb, const int iw,
-            const int kd_b, const int kd_e, const int kh_b, const int kh_e,
-            const int kw_b, const int kw_e) const;
+    dim_t get_comp_ker_idx(dim_t kd_b, dim_t kd_e, dim_t kh_b, dim_t kh_e,
+            dim_t kw_b, dim_t kw_e) const;
+    dim_t get_comp_offset(dim_t g, dim_t icb, dim_t iw, dim_t kd_b, dim_t kd_e,
+            dim_t kh_b, dim_t kh_e, dim_t kw_b, dim_t kw_e) const;
     void create_kernels();
 
     const pd_t *pd() const {
@@ -254,7 +254,7 @@ private:
     // precalculated values
     std::vector<dim_t> kd_bs, kd_es, kh_bs, kh_es, kw_bs, kw_es;
 
-    int KD, KH, KW, EXT_KD, EXT_KH, EXT_KW, KS, KD_BLOCK, KH_BLOCK, KW_BLOCK,
+    dim_t KD, KH, KW, EXT_KD, EXT_KH, EXT_KW, KS, KD_BLOCK, KH_BLOCK, KW_BLOCK,
             KD_BLOCK_PAD, KH_BLOCK_PAD, ID, IH, IW, ODP, OHP, OWP, OD, OH, OW,
             SD, SH, SW, FP, TP, LP, DD, DH, DW;
     dim_t src_w_sz, src_h_sz, src_d_sz, dst_w_sz, dst_h_sz, dst_d_sz, wei_oc_sz,
@@ -262,7 +262,7 @@ private:
     dim_t pbuf_w_sz, pbuf_h_sz, pbuf_d_sz;
     dim_t comp_icb_sz, comp_ker_sz, comp_kw_sz, comp_iw_sz;
 
-    int oc_chunks;
+    dim_t oc_chunks;
     bool need_postwork;
     bool need_compensation;
     bool is_amx;
