@@ -74,7 +74,7 @@ void gru_lbr_fwd_postgemm_template(T1 func1, T2 func2, T3 to_src,
 
     const auto postgemm = [&](dim_t i) {
         PRAGMA_OMP_SIMD()
-        for (int j = 0; j < rnn.dhc; j++) {
+        for (int j = 0; j < static_cast<int>(rnn.dhc); j++) {
             const float Wh_b = scratch_cell(i, 2, j) + bias(3, j);
             auto G0 = func1(scales, // default func1 is sigmoid
                     scratch_gates(i, 0, j) + scratch_cell(i, 0, j)
@@ -213,7 +213,7 @@ void gru_lbr_bwd_postgemm_template(T1 to_src, const rnn_utils::rnn_conf_t &rnn,
     parallel_nd(rnn.mb, [&](dim_t i) {
         acc_data_t diff_attention = 0.0f;
         PRAGMA_OMP_SIMD(reduction(+ : diff_attention))
-        for (int j = 0; j < rnn.dhc; j++) {
+        for (dim_t j = 0; j < rnn.dhc; j++) {
             const float h = src_iter(i, j);
             const float dHt = diff_dst_iter(i, j) + diff_dst_layer(i, j);
             float dG0 = (h - ws_gates(i, 2, j)) * dHt

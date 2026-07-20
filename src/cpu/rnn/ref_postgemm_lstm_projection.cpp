@@ -74,7 +74,7 @@ rnn_postgemm_sig((rnn_postgemm_fwd_t<src_type, scratch_type,
     // Currently, scratch_gates_ contains the output of the projection
     const int n_elem = block_step / (int)sizeof(dst_layer_t);
 
-    const int m_block
+    const dim_t m_block
             = (rnn.is_brgemm && !rnn.unfused_post_gemm) ? rnn.m_block : rnn.mb;
 
     for (int i = 0; i < m_block; i++)
@@ -117,12 +117,12 @@ rnn_postgemm_sig(rnn_postgemm_fwd_u8_t::lstm_projection_postgemm) {
         return (q10n::saturate<float>(s) - wcomp) / (wscale * data_scale);
     };
 
-    auto postgemm_call = [&](int i) {
+    auto postgemm_call = [&](dim_t i) {
         const int n_elem = block_step / (int)sizeof(dst_layer_t);
         PRAGMA_OMP_SIMD()
         for (int j = 0; j < n_elem; j++) {
-            const int scratch_off = i * rnn.scratch_gates_ld + j;
-            const int dst_off = i * dst_layer_ld + j;
+            const dim_t scratch_off = i * rnn.scratch_gates_ld + j;
+            const dim_t dst_off = i * dst_layer_ld + j;
             const float tmp
                     = dequantize_s32_f32(scratch_gates_[scratch_off], j);
             dst_layer_[dst_off] = quantize_f32_u8(tmp);
@@ -165,8 +165,8 @@ rnn_postgemm_sig(rnn_postgemm_fwd_s8_t::lstm_projection_postgemm) {
         const int n_elem = block_step / (int)sizeof(dst_layer_t);
         PRAGMA_OMP_SIMD()
         for (int j = 0; j < n_elem; j++) {
-            const int scratch_off = i * rnn.scratch_gates_ld + j;
-            const int dst_off = i * dst_layer_ld + j;
+            const dim_t scratch_off = i * rnn.scratch_gates_ld + j;
+            const dim_t dst_off = i * dst_layer_ld + j;
             const float tmp
                     = dequantize_s32_f32(scratch_gates_[scratch_off], j);
             dst_layer_[dst_off] = quantize_f32_s8(tmp);
