@@ -205,7 +205,7 @@ rnn_cell_execution_sig((ref_rnn_fwd_t<src_type, weights_type,
                 diff_src_iter_, diff_src_iter_c_, diff_dst_layer_,
                 diff_dst_iter_, diff_dst_iter_c_, weights_peephole_, bias_[0],
                 ws_grid_, scratch_cell_, dst_iter_postgemm, wscales_postgemm,
-                rnn.dhc * sizeof(scratch_t));
+                static_cast<int>(rnn.dhc * sizeof(scratch_t)));
     }
 
     if (rnn.is_lstm_projection) {
@@ -214,7 +214,7 @@ rnn_cell_execution_sig((ref_rnn_fwd_t<src_type, weights_type,
         gemm_acc_t *const Cp = (rnn.dt_conf == all_f32)
                 ? reinterpret_cast<gemm_acc_t *>(dst_layer_)
                 : scratch_gates_;
-        const int pLDDl = rnn.dst_layer_ld(cell_position, true);
+        const dim_t pLDDl = rnn.dst_layer_ld(cell_position, true);
         const int pmask
                 = this->pd_->attr()->rnn_weights_projection_qparams_.mask_;
 
@@ -256,7 +256,8 @@ rnn_cell_execution_sig((ref_rnn_fwd_t<src_type, weights_type,
                     nullptr, dst_layer_, nullptr, nullptr, w_proj_comp, nullptr,
                     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
                     nullptr, nullptr, nullptr, nullptr, dst_iter_,
-                    wscales_proj_postgemm, rnn.dlc * sizeof(dst_layer_t));
+                    wscales_proj_postgemm,
+                    static_cast<int>(rnn.dlc * sizeof(dst_layer_t)));
         }
     }
 
@@ -311,11 +312,11 @@ rnn_cell_execution_sig((ref_rnn_bwd_t<src_type, weights_type,
         const auto dst_ld = utils::rnd_up(rnn.mb, rnd_up_size);
 
         const auto layer_transpose = src_layer_iter_transpose_t(src_layer_ld,
-                dst_ld, rnn.mb, rnn.slc,
+                dst_ld, static_cast<int>(rnn.mb), static_cast<int>(rnn.slc),
                 this->rnn_brgemm_.kernel_transpose_layer_[src_layer_ld_nb]
                         .get());
         const auto iter_transpose = src_layer_iter_transpose_t(src_iter_ld,
-                dst_ld, rnn.mb, rnn.sic,
+                dst_ld, static_cast<int>(rnn.mb), static_cast<int>(rnn.sic),
                 this->rnn_brgemm_.kernel_transpose_iter_[src_iter_ld_nb].get());
         layer_transpose.execute(src_layer_, scratch_src_layer_);
         iter_transpose.execute(src_iter_, scratch_src_iter_);
