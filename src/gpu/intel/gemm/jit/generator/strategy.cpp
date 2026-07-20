@@ -636,11 +636,4 @@ void downgradeBPFAccess(const GEMMProblem &problem, GEMMStrategy &strategy)
                       problem.B.layout == MatrixLayout::N, strategy.unroll[LoopN] * problem.Tb_ext);
 }
 
-void GEMMStrategy::trimKChain(HW hw, int k, const GEMMProblem &problem)
-{
-    int minOPCount = minOuterProductCount(problem, *this);
-    kChain = gcd(kChain, k / minOPCount);
-}
-
-
 GEMMSTONE_NAMESPACE_END

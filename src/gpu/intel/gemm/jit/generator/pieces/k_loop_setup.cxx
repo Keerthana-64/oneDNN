@@ -394,7 +394,7 @@ bool Generator<hw>::gemmPrepMaskedAB(const GEMMProblem &problem, GEMMStrategy &s
         if (strategy.ka_load > strategy.ka_load_masked) {
             status << "Downgrading ka_load: " << strategy.ka_load << " -> " << strategy.ka_load_masked << status_stream::endl;
             strategy.ka_load = strategy.ka_load_masked;
-            strategy.trimKChain(hw, strategy.ka_load, problem);
+            strategy.kChain = trimmedKChain(problem, strategy, strategy.ka_load);
             recalc = true;
         }
         // Avoid access patterns that require double masking, unless enabled.
@@ -413,7 +413,7 @@ bool Generator<hw>::gemmPrepMaskedAB(const GEMMProblem &problem, GEMMStrategy &s
         if (strategy.kb_load > strategy.kb_load_masked) {
             status << "Downgrading kb_load: " << strategy.kb_load << " -> " << strategy.kb_load_masked << status_stream::endl;
             strategy.kb_load = strategy.kb_load_masked;
-            strategy.trimKChain(hw, strategy.kb_load, problem);
+            strategy.kChain = trimmedKChain(problem, strategy, strategy.kb_load);
             recalc = true;
         }
         if (isBlock2D(strategy.B.accessType) || strategy.allowDoubleMasking(LoopN))

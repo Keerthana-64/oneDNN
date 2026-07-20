@@ -332,8 +332,6 @@ struct GEMMStrategy : public GEMMStrategyPOD
     void preflight(ngen::HW hw, const GEMMProblem &problem);
     bool minimize(ngen::HW hw, const GEMMProblem &problem);
 
-    void trimKChain(ngen::HW hw, int k, const GEMMProblem &problem);
-
     int wgTile(LoopType l)                            const { return unroll[l] * wg[l]; }
     int cInterleaveChunk(Type Tc_ext)                 const { return cInterleave ? 64 / Tc_ext : 1; }
 

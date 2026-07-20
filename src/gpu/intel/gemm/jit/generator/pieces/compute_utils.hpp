@@ -77,6 +77,11 @@ static inline int minOuterProductCount(const GEMMProblem &problem, const GEMMStr
     return kfma;
 }
 
+static inline int trimmedKChain(const GEMMProblem &problem, const GEMMStrategy &strategy, int k)
+{
+    return gcd(strategy.kChain, k / minOuterProductCount(problem, strategy));
+}
+
 // Return # of outer products performed at once.
 static inline int outerProductCount(const GEMMProblem &problem, const GEMMStrategy &strategy)
 {

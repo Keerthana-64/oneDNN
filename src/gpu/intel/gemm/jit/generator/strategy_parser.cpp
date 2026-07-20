@@ -17,6 +17,7 @@
 #include "gemmstone/strategy_parser.hpp"
 #include "gemmstone/kernel_catalog.hpp"
 #include "internal/utils.hpp"
+#include "pieces/compute_utils.hpp"
 #include "pieces/layout_utils.hpp"
 
 #include <cctype>
@@ -27,7 +28,6 @@
 GEMMSTONE_NAMESPACE_START
 
 using namespace ngen;
-
 
 static void unparseAccessType(std::ostream &s, const MatrixAddressingStrategy &astrategy);
 static void unparseAddressBase(std::ostream &s, ngen::AddressBase base);
@@ -707,6 +707,20 @@ void adjustStrategy(HW hw, const GEMMProblem &problem, GEMMStrategy &strategy, c
         if (isPacked(problem.A.layout)) strategy.remHandling[LoopM] = RemainderHandling::Split;
         if (isPacked(problem.B.layout)) strategy.remHandling[LoopN] = RemainderHandling::Split;
     }
+
+    // If masked ka/kb loads would undercut the chained op count, force split
+    // handling to avoid implicit reduction in kChain.
+    if ((strategy.remHandling[LoopM] == RemainderHandling::General)
+            && (strategy.ka_load > strategy.ka_load_masked)
+            && (trimmedKChain(problem, strategy, strategy.ka_load_masked)
+                    < strategy.kChain))
+        strategy.remHandling[LoopM] = RemainderHandling::Split;
+
+    if ((strategy.remHandling[LoopN] == RemainderHandling::General)
+            && (strategy.kb_load > strategy.kb_load_masked)
+            && (trimmedKChain(problem, strategy, strategy.kb_load_masked)
+                    < strategy.kChain))
+        strategy.remHandling[LoopN] = RemainderHandling::Split;
 
     // Finally, no remainder handling needed for GEMV-type kernels.
     if (strategy.unroll[LoopM] * strategy.wg[LoopM] == 1) strategy.remHandling[LoopM] = RemainderHandling::Ignore;
