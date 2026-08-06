@@ -78,6 +78,9 @@ status_t pooling_desc_init(pooling_desc_t *pool_desc, prop_kind_t prop_kind,
     (is_fwd ? pd.src_desc : pd.diff_src_desc) = *src_desc;
     (is_fwd ? pd.dst_desc : pd.diff_dst_desc) = *dst_desc;
 
+    VCHECK_POOLING(utils::one_of(src_desc->ndims, 3, 4, 5), VERBOSE_BAD_NDIMS,
+            "src", src_desc->ndims);
+
     int sp_dims = src_desc->ndims - 2;
     utils::array_copy(pd.strides, strides, sp_dims);
     utils::array_copy(pd.kernel, kernel, sp_dims);
@@ -95,8 +98,6 @@ status_t pooling_desc_init(pooling_desc_t *pool_desc, prop_kind_t prop_kind,
 
     VCHECK_POOLING(pd.accum_data_type != data_type::undef,
             VERBOSE_INVALID_DATATYPE, "accumulator");
-    VCHECK_POOLING(utils::one_of(src_desc->ndims, 3, 4, 5), VERBOSE_BAD_NDIMS,
-            "src", src_desc->ndims);
     VCHECK_POOLING(utils::one_of(dst_desc->ndims, 3, 4, 5), VERBOSE_BAD_NDIMS,
             "dst", dst_desc->ndims);
     for (int i : {0, 1})

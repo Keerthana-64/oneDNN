@@ -104,4 +104,27 @@ TEST_F(pd_test_t, TestOptionalQueries) {
     ASSERT_EQ(pd.get_prop_kind(), dnnl::prop_kind::undef);
 }
 
+TEST_F(pd_test_t, TestSpatialSrcNdims) {
+    // Pooling and deconvolution take the spatial rank as src ndims - 2 and use
+    // it as an element count, so a source below 3D has to be rejected before
+    // that count is formed.
+    memory::desc src_md {{16}, memory::data_type::f32, memory::format_tag::x};
+    memory::desc wei_md {
+            {16, 16}, memory::data_type::f32, memory::format_tag::ab};
+    memory::dims spatial_1d {1};
+    memory::dims zero_1d {0};
+
+    catch_expected_failures([&]() {
+        pooling_forward::primitive_desc {e, prop_kind::forward_inference,
+                algorithm::pooling_max, src_md, src_md, spatial_1d, spatial_1d,
+                zero_1d, zero_1d, zero_1d};
+    }, true, dnnl_invalid_arguments);
+
+    catch_expected_failures([&]() {
+        deconvolution_forward::primitive_desc {e, prop_kind::forward_inference,
+                algorithm::deconvolution_direct, src_md, wei_md, src_md,
+                spatial_1d, zero_1d, zero_1d};
+    }, true, dnnl_invalid_arguments);
+}
+
 } // namespace dnnl

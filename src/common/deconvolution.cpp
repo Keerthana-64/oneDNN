@@ -91,6 +91,9 @@ status_t deconv_desc_init(deconvolution_desc_t *deconv_desc,
         (prop_kind == backward_weights ? dd.diff_bias_desc : dd.bias_desc)
                 = *bias_desc;
 
+    VCHECK_DECONV(utils::one_of(src_desc->ndims, 3, 4, 5), VERBOSE_BAD_NDIMS,
+            "src", src_desc->ndims);
+
     int sp_dims = src_desc->ndims - 2;
     utils::array_copy(dd.strides, strides, sp_dims);
     utils::array_copy(dd.padding[0], padding_l, sp_dims);
@@ -109,8 +112,6 @@ status_t deconv_desc_init(deconvolution_desc_t *deconv_desc,
     VCHECK_DECONV(src_desc->ndims == dst_desc->ndims,
             VERBOSE_INCONSISTENT_NDIMS_WITH_VALS, "src", "dst", src_desc->ndims,
             dst_desc->ndims);
-    VCHECK_DECONV(utils::one_of(src_desc->ndims, 3, 4, 5), VERBOSE_BAD_NDIMS,
-            "src", src_desc->ndims);
     VCHECK_DECONV(utils::one_of(weights_desc->ndims, src_desc->ndims,
                           src_desc->ndims + 1),
             VERBOSE_INCONSISTENT_NDIMS_WITH_VALS, "src", "weights",
